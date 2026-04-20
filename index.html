@@ -1137,12 +1137,15 @@ async function playBlock(idx){
     if(buf) playBufAt(buf,blockStart,0.85);
   }
 
-  // Schedule announcement + beeps at T-5
-  const warnAt=blockStart+block.duration-5;
-  if(block.duration>6){
-    if(annDecodedBuf) playBufAt(annDecodedBuf,warnAt,1.0);
-    // 5 beeps, 1 per second
-    for(let i=0;i<5;i++) playBufAt(beepBuf,warnAt+i,1.0);
+  // Schedule announcement + beeps sequentially before block end
+  // Beeps: 5 x 1 sec = 5 sec. Announcement plays just before beeps.
+  const annDur = annDecodedBuf ? annDecodedBuf.duration : 0;
+  const totalWarnDur = annDur + 5; // announcement + 5 beeps
+  const warnAt = blockStart + block.duration - totalWarnDur;
+  if(block.duration > totalWarnDur + 1){
+    if(annDecodedBuf) playBufAt(annDecodedBuf, warnAt, 1.0);
+    // Beeps start after announcement ends
+    for(let i=0;i<5;i++) playBufAt(beepBuf, warnAt + annDur + i, 1.0);
   }
 
   // Preload next
